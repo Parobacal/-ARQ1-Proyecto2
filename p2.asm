@@ -21,6 +21,8 @@ opcion db 0ah,0dh,'Escoja una opcion: ',0ah,0dh,'$'
 opcion1 db '///////ELIGA UNA VISTA///////',10,13,'1) => EJES X-Y',10,13,'2) => EJES X-Z',10,13,'3) => EJES Y-Z',10,13,'R) => REGRESAR',0ah,0dh,'$'
 opcion2 db 'REGISTRE SU NOMBRE DE USUARIO Y PRESIONE ENTER',10,13,'$'
 opcion3 db 0ah,0dh,'GAME OVER',0ah,0dh,'$'
+;-----------------------------------------------------------vector para mostrar los limites
+vec_limit db 100 dup("$")
 ;-----------------------------------------------------------variables para la circunferencia
 x dw 160 ; center x
 y dw 100 ; center y
@@ -53,9 +55,43 @@ xparabola dw 100
 yparabola dw 160
 px dw 0
 py dw 0
-apertura dw 0 
+apertura dw 1 
 pixel dw 0
+limite_pos1 dw 5
+limite_pos2 dw 5
+limite_neg1 dw 0
+limite_neg2 dw 0
 
+;------------------------------------------------------------variables para la elipse
+r1 dw 140 ; radius
+r2 dw 140 ; radius
+xelipseUP dw 160
+yelipseUP dw 198
+xelipseDOWN dw 160
+yelipseDOWN dw 2
+balanceE dw 0
+xoffE dw 0
+yoffE dw 0 
+xplusxE dw 0
+xminusxE dw 0
+yplusyE dw 0
+yminusyE dw 0
+xplusyE dw 0
+xminusyE dw 0
+yplusxE dw 0
+yminusxE dw 0
+
+balanceED dw 0
+xoffED dw 0
+yoffED dw 0 
+xplusxED dw 0
+xminusxED dw 0
+yplusyED dw 0
+yminusyED dw 0
+xplusyED dw 0
+xminusyED dw 0
+yplusxED dw 0
+yminusxED dw 0
 
 .code ;segmento de código
 ;================== SECCION DE CODIGO ===========================
@@ -87,8 +123,8 @@ pixel dw 0
 				ModoVideo
 				CALL xy_titles
 				PintarPlano 7
-				;DrawCircle x, y, r
-				ParabolaF xparabola,yparabola,apertura,px,py
+				DrawCircle x, y, r
+				;ParabolaF xparabola,yparabola,apertura,px,py,limite_pos1,limite_pos2
 				;LineaF
 				;conoF
 				getChar
@@ -106,7 +142,10 @@ pixel dw 0
 				ModoVideo
 				CALL yz_titles
 				PintarPlano 7
-				DrawCircle x, y, r
+				;DrawCircle x, y, r
+				DrawEU xelipseUP,yelipseUP,r1 
+				DrawEUD xelipseDOWN,yelipseDOWN,r2 
+				;DrawElipseDOWN xelipseDOWN,yelipseDOWN,r 
 				getChar
 				ModoTexto
 				jmp MenuGrafica
@@ -121,6 +160,71 @@ pixel dw 0
 	main endp
 
 xy_titles PROC
+conversionF limite_pos1,vec_limit
+xor si,si
+;-------------------------------------limites
+mov dh, 0bh   ; posicion y en pantalla
+mov dl, 01h   ; posicion x en pantalla
+mov ah, 02h
+int 10h 
+ mov     al, '-' ;char a dibujar
+ mov     ah, 09h
+ mov     bl, 7 ; attribute color celeste.
+ mov     cx, 1   ; solo un char.
+ int     10h 
+
+mov dh, 0bh   ; posicion y en pantalla
+mov dl, 02h   ; posicion x en pantalla
+mov ah, 02h
+int 10h 
+ mov     al, vec_limit[si] ;char a dibujar
+ mov     ah, 09h
+ mov     bl, 7 ; attribute color celeste.
+ mov     cx, 1   ; solo un char.
+ int     10h 
+
+mov dh, 0bh   ; posicion y en pantalla
+mov dl, 025h   ; posicion x en pantalla
+mov ah, 02h
+int 10h 
+ mov     al, vec_limit[si] ;char a dibujar
+ mov     ah, 09h
+ mov     bl, 7 ; attribute color celeste.
+ mov     cx, 1   ; solo un char.
+ int     10h 
+
+mov dh, 01h   ; posicion y en pantalla
+mov dl, 015h   ; posicion x en pantalla
+mov ah, 02h
+int 10h 
+ mov     al, vec_limit[si] ;char a dibujar
+ mov     ah, 09h
+ mov     bl, 7 ; attribute color celeste.
+ mov     cx, 1   ; solo un char.
+ int     10h 
+
+
+mov dh, 017h   ; posicion y en pantalla
+mov dl, 015h   ; posicion x en pantalla
+mov ah, 02h
+int 10h 
+ mov     al, '-' ;char a dibujar
+ mov     ah, 09h
+ mov     bl, 7 ; attribute color celeste.
+ mov     cx, 1   ; solo un char.
+ int     10h 
+
+mov dh, 017h   ; posicion y en pantalla
+mov dl, 016h   ; posicion x en pantalla
+mov ah, 02h
+int 10h 
+ mov     al, vec_limit[si] ;char a dibujar
+ mov     ah, 09h
+ mov     bl, 7 ; attribute color celeste.
+ mov     cx, 1   ; solo un char.
+ int     10h 
+
+;-------------------------------------fin de limites
 mov dh, 01h   ; posicion y en pantalla
 mov dl, 025h   ; posicion x en pantalla
 mov ah, 02h

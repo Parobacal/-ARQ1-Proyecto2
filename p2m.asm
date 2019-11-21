@@ -182,6 +182,7 @@ DrawCircle macro circleCenterX, circleCenterY, radius
      SubAndAssign xminusy, circleCenterX, yoff
      AddAndAssign yplusx, circleCenterY, xoff
      SubAndAssign yminusx, circleCenterY, xoff
+     ;
     DrawPixel xplusy, yminusx
     DrawPixel xplusx, yminusy
     DrawPixel xminusx, yminusy
@@ -218,7 +219,7 @@ endm
 
 
 ;*********************Parabola
-ParabolaF macro x,y,apertura,px,py
+ParabolaF macro x,y,apertura,px,py,lim1,lim2
 local Positive_part,Compare_limit,End_graph,Negative_Part,Next,Compare_limit2
 push dx
 ObtenerPuntoF x,y
@@ -229,6 +230,8 @@ Positive_part:
     add px,1
     mov si,px 
     mov ax,px 
+    mul si
+    mov si,apertura
     mul si
     mov py,ax
     mov bx,py
@@ -241,7 +244,8 @@ Positive_part:
     mov es:[di],dl
     jmp Compare_limit
 Compare_limit:
-    cmp px,5
+    mov bx,lim1
+    cmp bx,px
     je Next
     jmp Positive_part
 Next:
@@ -254,6 +258,8 @@ Negative_Part:
     mov si,px 
     mov ax,px 
     mul si
+    mov si,apertura
+    mul si
     mov py,ax
     mov bx,py
     sub x,bx 
@@ -265,7 +271,8 @@ Negative_Part:
     mov es:[di],dl
     jmp Compare_limit2
 Compare_limit2:
-    cmp px,5
+    mov bx,lim2
+    cmp px,bx
     je End_graph
     jmp Negative_part
 End_graph:
@@ -296,6 +303,212 @@ e2: mov ah,0ch
     jbe e2
 endm
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;elipse
+
+
+AsignarEU macro a, b
+    mov ax, [b]
+    mov [a], ax    
+endm
+;a = -a 
+NegateEU macro a
+    mov ax, [a]
+    neg ax
+    mov [a], ax    
+endm
+;a = a+1 
+IncVarEU macro a
+    mov ax, [a]
+    inc ax
+    mov [a], ax    
+endm
+;a = a-1 
+DecVarEU macro a
+    mov ax, [a]
+    dec ax
+    mov [a], ax    
+endm
+Compare2VariablesEU macro a, b
+    mov cx, [a]
+    cmp cx, [b]
+endm
+CompareVariableAndNumberEU macro a, b
+    mov cx, [a]
+    cmp cx, b
+endm
+;c = a+b
+AddAndAssignEU macro c, a, b
+    mov ax, [a]
+    add ax, [b]
+    mov [c], ax
+endm 
+;c = a-b
+SubAndAssignEU macro c, a, b
+    mov ax, [a]
+    sub ax, [b]
+    mov [c], ax
+endm
+;d = a+b+c
+Add3NumbersAndAssignEU macro d, a, b, c
+    mov ax, [a]
+    add ax, [b]
+    add ax, [c]
+    mov [d], ax
+endm 
+;d = a-b-c
+Sub3NumbersAndAssignEU macro d, a, b, c
+    mov ax, [a]
+    sub ax, [b]
+    sub ax, [c]
+    mov [d], ax
+endm
+DrawPixelEU macro x, y
+    mov cx, [x]  
+    mov dx, [y] 
+     
+    mov al, 10  
+    mov ah, 0ch 
+    int 10h     
+endm
+DrawEU macro circleCenterX, circleCenterY, radius    
+Local draw_circle_loop,balance_negative,end_drawing
+    AsignarEU yoffE, radius
+    AsignarEU balanceE, radius
+    NegateEU balanceE
+    draw_circle_loop:
+     AddAndAssignEU xplusxE, circleCenterX, xoffE
+     SubAndAssignEU xminusxE, circleCenterX, xoffE
+     AddAndAssignEU yplusyE, circleCenterY, yoffE
+     SubAndAssignEU yminusyE, circleCenterY, yoffE
+     ;AddAndAssignEU xplusyE, circleCenterX, yoffE
+     ;SubAndAssignEU xminusyE, circleCenterX, yoffE
+     ;AddAndAssignEU yplusxE, circleCenterY, xoffE
+     ;SubAndAssignEU yminusxE, circleCenterY, xoffE
+     ;
+    DrawPixelEU xplusyE, yminusxE
+    DrawPixelEU xplusxE, yminusyE
+    DrawPixelEU xminusxE, yminusyE
+    DrawPixelEU xminusyE, yminusxE
+    DrawPixelEU xminusyE, yplusxE
+    ;DrawPixelEU xminusxE, yplusyE
+    ;DrawPixelEU xplusxE, yplusyE
+    ;DrawPixelEU xplusyE, yplusxE
+    Add3NumbersAndAssignEU balanceE, balanceE, xoffE, xoffE
+    CompareVariableAndNumberEU balanceE, 0
+    jl balance_negative
+    DecVarEU yoffE  
+    Sub3NumbersAndAssignEU balanceE, balanceE, yoffE, yoffE  
+    balance_negative:
+    IncVarEU xoffE
+    Compare2VariablesEU xoffE, yoffE
+    jg end_drawing
+    jmp draw_circle_loop      
+    end_drawing:
+endm
+
+
+
+AsignarEUD macro a, b
+    mov ax, [b]
+    mov [a], ax    
+endm
+;a = -a 
+NegateEUD macro a
+    mov ax, [a]
+    neg ax
+    mov [a], ax    
+endm
+;a = a+1 
+IncVarEUD macro a
+    mov ax, [a]
+    inc ax
+    mov [a], ax    
+endm
+;a = a-1 
+DecVarEUD macro a
+    mov ax, [a]
+    dec ax
+    mov [a], ax    
+endm
+Compare2VariablesEUD macro a, b
+    mov cx, [a]
+    cmp cx, [b]
+endm
+CompareVariableAndNumberEUD macro a, b
+    mov cx, [a]
+    cmp cx, b
+endm
+;c = a+b
+AddAndAssignEUD macro c, a, b
+    mov ax, [a]
+    add ax, [b]
+    mov [c], ax
+endm 
+;c = a-b
+SubAndAssignEUD macro c, a, b
+    mov ax, [a]
+    sub ax, [b]
+    mov [c], ax
+endm
+;d = a+b+c
+Add3NumbersAndAssignEUD macro d, a, b, c
+    mov ax, [a]
+    add ax, [b]
+    add ax, [c]
+    mov [d], ax
+endm 
+;d = a-b-c
+Sub3NumbersAndAssignEUD macro d, a, b, c
+    mov ax, [a]
+    sub ax, [b]
+    sub ax, [c]
+    mov [d], ax
+endm
+DrawPixelEUD macro x, y
+    mov cx, [x]  
+    mov dx, [y] 
+     
+    mov al, 10  
+    mov ah, 0ch 
+    int 10h     
+endm
+DrawEUD macro circleCenterX, circleCenterY, radius    
+Local draw_circle_loop,balance_negative,end_drawing
+    AsignarEUD yoffED, radius
+    AsignarEUD balanceED, radius
+    NegateEUD balanceED
+    draw_circle_loop:
+     AddAndAssignEUD xplusxED, circleCenterX, xoffED
+     SubAndAssignEUD xminusxED, circleCenterX, xoffED
+     AddAndAssignEUD yplusyED, circleCenterY, yoffED
+     SubAndAssignEUD yminusyED, circleCenterY, yoffED
+     ;AddAndAssignEU xplusyE, circleCenterX, yoffE
+     ;SubAndAssignEU xminusyE, circleCenterX, yoffE
+     ;AddAndAssignEU yplusxE, circleCenterY, xoffE
+     ;SubAndAssignEU yminusxE, circleCenterY, xoffE
+     ;
+    ;DrawPixelEU xplusyE, yminusxE
+    ;DrawPixelEU xplusxE, yminusyE
+    ;DrawPixelEU xminusxE, yminusyE
+    ;DrawPixelEU xminusyE, yminusxE
+    ;DrawPixelEU xminusyE, yplusxE
+    DrawPixelEUD xminusxED, yplusyED
+    DrawPixelEUD xplusxED, yplusyED
+    DrawPixelEUD xplusyED, yplusxED
+    Add3NumbersAndAssignEUD balanceED, balanceED, xoffED, xoffED
+    CompareVariableAndNumberEUD balanceED, 0
+    jl balance_negative
+    DecVarEUD yoffED 
+    Sub3NumbersAndAssignEUD balanceED, balanceED, yoffED, yoffED
+    balance_negative:
+    IncVarEUD xoffED
+    Compare2VariablesEUD xoffED, yoffED
+    jg end_drawing
+    jmp draw_circle_loop      
+    end_drawing:
+endm
+
+
 
 ObtenerPuntoF macro x,y
 ;fila = i = x
@@ -311,26 +524,30 @@ mov pixel,ax
 pop dx
 endm
 
-;*********************Bola
 
-PintarPelota macro pos,color
-push dx
-mov di,pos
-mov dl,color
-mov es:[di],dl
-mov es:[di+1],dl
-mov es:[di+2],dl
 
-mov es:[di+320],dl
-mov es:[di+321],dl
-mov es:[di+322],dl
-
-mov es:[di+640],dl
-mov es:[di+641],dl
-mov es:[di+642],dl
-pop dx
-endm
-
-Delay macro 
+conversionF macro lim, vec_limit
+Local Conversion,Conv,FinConv
+Conversion:
+    xor si,si
+    xor cx,cx
+    mov ax,lim
+Conv:
+    mov bl,10
+    div bl
+    add ah,48
+    ;ah = residuo
+    ;al = cociente
+    push ax
+    inc cx
+    cmp al,00h
+    je FinConv
+    xor ah,ah
+    jmp Conv
+FinConv:
+    pop ax
+    mov vec_limit[si],ah
+    inc si
+loop FinConv
 endm
 
