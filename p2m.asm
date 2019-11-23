@@ -8,63 +8,398 @@ ETIQUETA:
 	int 21h
 endm
 
-getRuta macro buffer
-LOCAL INICIO,FIN
-	xor si,si
-INICIO:
-	getChar
-	cmp al,0dh
-	je FIN
-	mov buffer[si],al
-	inc si
-	jmp INICIO
-FIN:
-	mov buffer[si],00h
-endm
-
-getTexto macro buffer
-LOCAL INICIO,FIN
-	xor si,si
-INICIO:
-	getChar
-	cmp al,0dh
-	je FIN
-	mov buffer[si],al
-	inc si
-	jmp INICIO
-FIN:
-	mov buffer[si],'$'
-endm
-
 getChar macro
-mov ah,0dh
-int 21h
-mov ah,01h
-int 21h
+	mov ah,0dh
+	int 21h
+	mov ah,01h
+	int 21h
 endm
 
-printChar macro char
-mov ah,02h
-mov dl,char
+;****************//////// FICHEROS \\\\\\\********************
+abrirF macro ruta,handle
+mov ah,3dh
+mov al,010b
+lea dx,ruta
 int 21h
+mov handle,ax
+jc ErrorAbrir
 endm
 
+leerF macro numbytes,buffer,handle
+mov ah,3fh
+mov bx,handle
+mov cx,numbytes
+lea dx,buffer
+int 21h
+jc ErrorLeer
+endm
 
-quitarS macro buffer,numBytes
-Local Compare,Change,Out
+;================================================================
+sintactico macro numBytes, buffer
+xor cx,cx
 mov cx,numBytes
 xor si,si
-Compare:
-	cmp buffer[si],24h
-	je Change
-	jmp Out
-Change:
-	mov buffer[si],00h
-	jmp Out
-Out:
-	inc si
-loop Compare
+xor di,di
+Ciclo:
+	cmp buffer[si],03ch ;<
+	je Sig
+	jmp Delimitadores
+	Sig:
+		inc si
+		cmp buffer[si],70h	;p
+		je Inicio
+		cmp buffer[si],65h	;e
+		je Opciones
+		cmp buffer[si],6ch	;l
+		je Limites
+		cmp buffer[si],02fh ;/
+		je FinEt
+		jmp ErrorS
+	Inicio:
+		inc si 
+		cmp buffer[si],79h	;y
+		je Inicio2
+		jmp ErrorS
+	Inicio2:
+		inc si
+		cmp buffer[si],32h	;2
+		je FinInicio
+		jmp ErrorS
+	FinInicio:
+		inc si 
+		cmp buffer[si],03eh	;>
+		je NoAplica	;para que incremente si
+		jmp ErrorS
+	Opciones:
+		inc si
+		cmp buffer[si],63h	;c
+		je Ecuaciones
+		cmp buffer[si],06ah	;j
+		je EjeQ
+		jmp ErrorS
+	Ecuaciones:
+		add si,08h;07h
+		jmp GuardarEcuacion
+	EjeQ:
+		add si,02h
+		jmp QueEje
+	QueEje:
+		cmp buffer[si],78h	;x
+		je EjeX
+		cmp	buffer[si],79h	;y
+		je EjeY
+		cmp buffer[si],7ah	;z
+		je EjeZ
+		jmp ErrorS
+	EjeX:
+		mov eje,01h
+		jmp NoAplica
+	EjeY:
+		mov eje,02h
+		jmp NoAplica
+	EjeZ:
+		mov eje,03h
+		jmp NoAplica
+	Limites:
+		;print esaese
+		inc si
+		cmp buffer[si],69h	;i
+		je LimInferior
+		cmp buffer[si],73h	;s
+		je LimSuperior
+		jmp ErrorS
+	LimInferior:
+		;print esai
+		add si,04h;03h
+		cmp eje,01h		;ejex
+		je LIX
+		cmp eje,02h		;ejey
+		je LIY
+		cmp eje,03h		;ejeZ
+		je LIZ
+		jmp ErrorS
+	LIX:
+		;inc si
+		mov al,buffer[si]
+		mov LimInfX[di],al
+		jmp AumentarLIX
+	AumentarLIX:
+		inc di
+		inc si
+		cmp buffer[si],03ch ;<
+		jne LIX
+		jmp FinGuardar
+	LIY:
+		;inc si
+		mov al,buffer[si]
+		mov LimInfY[di],al
+		jmp AumentarLIY
+	AumentarLIY:
+		inc di
+		inc si
+		cmp buffer[si],03ch ;<
+		jne LIY
+		jmp FinGuardar
+	LIZ:
+		;inc si
+		mov al,buffer[si]
+		mov LimInfZ[di],al
+		jmp AumentarLIZ
+	AumentarLIZ:
+		inc di
+		inc si
+		cmp buffer[si],03ch ;<
+		jne LIZ
+		jmp FinGuardar
+	LimSuperior:
+		;print esaese
+		add si,04h;03h
+		cmp eje,01h		;ejex
+		je LSX
+		cmp eje,02h		;ejey
+		je LSY
+		cmp eje,03h		;ejeZ
+		je LSZ
+		jmp ErrorS
+	LSX:
+		;inc si
+		mov al,buffer[si]
+		mov LimSupX[di],al
+		jmp AumentarLSX
+	AumentarLSX:
+		inc di
+		inc si
+		cmp buffer[si],03ch ;<
+		jne LSX
+		jmp FinGuardar
+	LSY:
+		;inc si
+		mov al,buffer[si]
+		mov LimSupY[di],al
+		jmp AumentarLSY
+	AumentarLSY:
+		inc di
+		inc si
+		cmp buffer[si],03ch ;<
+		jne LSY
+		jmp FinGuardar
+	LSZ:
+		;inc si
+		mov al,buffer[si]
+		mov LimSupZ[di],al
+		jmp AumentarLSZ
+	AumentarLSZ:
+		inc di
+		inc si
+		cmp buffer[si],03ch ;<
+		jne LSZ
+		jmp FinGuardar
+	
+		
+
+	GuardarEcuacion:
+		;inc si
+		mov al,buffer[si]
+		mov ecuacion[di],al
+		jmp Aumentar
+	Aumentar:
+		inc di
+		inc si
+		cmp buffer[si],03ch	;<
+		jne GuardarEcuacion
+		jmp FinGuardar
+	Delimitadores:
+		;inc si    *//////////////////
+		;delimitadores-------------------------
+		cmp buffer[si],20h	;espacio
+		je NoAplica
+		cmp buffer[si],09h	;tab
+		je NoAplica
+		cmp buffer[si],0ah	;salto de lÌnea
+		je NoAplica
+		cmp buffer[si],0dh	;retorno de carro
+		je NoAplica
+		cmp buffer[si],24h	;$
+		je NoAplica
+		jmp SaltoA
+	SaltoA:				;--------------
+		cmp buffer[si],03eh	;>
+		je NoAplica
+		jmp Hasta
+	Hasta:
+		dec cx
+		inc si
+		cmp cx,00h
+		jne SaltoA
+		jmp Repetir	;--------------
+	FinEt:
+		inc si
+		cmp buffer[si],70h	;p
+		je FINARCHIVO
+		cmp buffer[si],65h	;e
+		je SaltoA
+		cmp buffer[si],6ch	;l
+		je SaltoA
+		;jmp SaltoA		;----------------------
+		jmp NoAplica
+		
+	ErrorS:
+		;print mensajeSintactico
+		;printChar buffer[si]
+		jmp NoAplica
+	FinGuardar:
+		xor di,di	;volver el Ìndice a 0
+		jmp NoAplica
+	NoAplica:
+		inc si
+		jmp Repetir
+Repetir:
+	dec cx
+	cmp cx,00h
+	jne Ciclo
+FINARCHIVO:
+	
 endm
+
+;==============================================
+clasificacion macro numBytes, buffer
+LOCAL InicioCiclo, RepetirCiclo, Continuar, VariableX, VariableY, VariableZ, FINECUACION, FIN
+xor cx,cx
+mov cx,numBytes
+xor si,si
+xor di,di
+xor bx,bx
+InicioCiclo:
+	cmp buffer[si],02bh	;+
+	je SignoMas
+	cmp buffer[si],02dh	;-
+	je SignoMenos
+	cmp buffer[si],78h	;x
+	je VariableX
+	cmp buffer[si],79h	;y
+	je VariableY
+	cmp buffer[si],7ah	;z	
+	je VariableZ
+	cmp buffer[si],03dh	;=
+	je Igual
+	cmp buffer[si],24h	;$
+	je FINECUACION
+	jmp Continuar
+
+	Igual:
+		print msmSignoMas
+		mov signo,0	
+		mov ig,1
+		jmp Continuar
+	SignoMas:
+		print msmSignoMas
+		mov signo,0	
+		jmp Continuar
+	SignoMenos:
+		print msmSignoMenos
+		mov signo,1
+		jmp Continuar
+	VariableX:
+		mov bl,signo
+		mov sX,bl
+		print msmX
+		;inc si
+		;cmp buffer[si],	;potencia
+		;je ExponenteX
+		;jmp ExponenteX0
+		jmp Continuar
+	VariableY:
+		mov bl,signo
+		mov sY,bl
+		print msmY
+		jmp Continuar
+	VariableZ:
+		mov bl,signo
+		mov sZ,bl
+		print msmZ
+		cmp ig,1
+		je CambiarZ
+		jmp Continuar
+	CambiarZ:
+		mov VarZ,1
+		jmp Continuar
+	ExponenteX:
+		jmp Continuar
+	ExponenteX0:
+		jmp Continuar
+;	Delimitador:
+;		;inc si    *//////////////////
+;		;delimitadores-------------------------
+;		cmp buffer[si],20h	;espacio
+;		je Continuar
+;		cmp buffer[si],09h	;tab
+;		je Continuar
+;		cmp buffer[si],0ah	;salto de lÌnea
+;		je Continuar
+;		cmp buffer[si],0dh	;retorno de carro
+;		je Continuar
+;		cmp buffer[si],24h	;$
+;		je Continuar
+;		jmp Continuar
+	Continuar:
+		inc si
+		jmp RepetirCiclo
+RepetirCiclo:
+	dec cx
+	cmp cx,00h
+	jne InicioCiclo
+FINECUACION:
+	print msmEcuacion
+	cmp sX,0	
+	je XPositivo
+	jmp XNegativo 
+
+XNegativo:
+	print esai
+	cmp SY,0
+	je Silla
+	jmp Hiperboloide2
+
+Hiperboloide2:
+	print msmHiper2
+	mov identificador,'h'
+	jmp FIN
+Silla:
+	print msmSilla
+	mov identificador,'s'
+	jmp FIN
+
+XPositivo:
+	print esaese
+	cmp SY,0
+	je CasosZ
+	jmp FIN
+CasosZ:
+	cmp SZ,0
+	je ZPositivo
+	jmp Hiperboloide1
+ZPositivo:
+	cmp VarZ,0
+	je Elipsoide
+	jmp Paraboloide
+Elipsoide:
+	print msmElipse
+	mov identificador,'e'
+	jmp FIN
+Paraboloide:
+	print msmParabola
+	mov identificador,'p'
+	jmp FIN
+Hiperboloide1:
+	print msmHiper1
+	mov identificador,'c'
+	jmp FIN
+FIN:
+endm
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;macros graficas 2d 
+
 
 ;===========================FUNCIONES DE VIDEO===========================
 
@@ -219,6 +554,81 @@ endm
 
 
 ;*********************Parabola
+
+escalaP macro entero
+Local Cambiar1,Cambiar2,Diez,veinte,Treinta
+Diez:
+    cmp entero,10
+    jbe Cambiar1 
+    jmp Veinte
+Cambiar1:
+    mov limit_parabola,1
+    jmp fin 
+Veinte:
+    cmp entero,20
+    jbe Cambiar2 
+    jmp Treinta
+Cambiar2:
+    mov limit_parabola,2
+    jmp fin
+Treinta:
+    cmp entero,30
+    jbe Cambiar3
+    jmp Cuarenta
+Cambiar3:
+    mov limit_parabola,3
+    jmp fin
+Cuarenta:
+    cmp entero,40
+    jbe Cambiar4
+    jmp Cincuenta
+Cambiar4:
+    mov limit_parabola,4
+    jmp fin
+Cincuenta:
+    cmp entero,50
+    jbe Cambiar5
+    jmp Sesenta
+Cambiar5:
+    mov limit_parabola,5
+    jmp fin
+Sesenta:
+    cmp entero,60
+    jbe Cambiar6
+    jmp Setenta
+Cambiar6:
+    mov limit_parabola,6
+    jmp fin
+Setenta:
+    cmp entero,70
+    jbe Cambiar7
+    jmp Ochenta
+Cambiar7:
+    mov limit_parabola,7
+    jmp fin
+Ochenta:
+    cmp entero,80
+    jbe Cambiar8
+    jmp Noventa
+Cambiar8:
+    mov limit_parabola,8
+    jmp fin
+Noventa:
+    cmp entero,90
+    jbe Cambiar9
+    jmp Cien
+Cambiar9:
+    mov limit_parabola,9
+    jmp fin
+Cien:
+    cmp entero,100
+    jmp Cambiar10
+Cambiar10:
+    mov limit_parabola,10
+    jmp fin
+Fin:
+endm
+
 ParabolaF macro x,y,apertura,px,py,lim1,lim2
 local Positive_part,Compare_limit,End_graph,Negative_Part,Next,Compare_limit2
 push dx
@@ -526,28 +936,63 @@ endm
 
 
 
-conversionF macro lim, vec_limit
-Local Conversion,Conv,FinConv
-Conversion:
-    xor si,si
-    xor cx,cx
-    mov ax,lim
-Conv:
-    mov bl,10
-    div bl
-    add ah,48
-    ;ah = residuo
-    ;al = cociente
-    push ax
-    inc cx
-    cmp al,00h
-    je FinConv
-    xor ah,ah
-    jmp Conv
-FinConv:
-    pop ax
-    mov vec_limit[si],ah
-    inc si
-loop FinConv
-endm
+;conversionF macro lim, vec_limit
+;Local Conversion,Conv,FinConv
+;Conversion:
+;    xor si,si
+;    xor cx,cx
+;    mov ax,lim
+;Conv:
+;    mov bl,10
+;    div bl
+;    add ah,48
+;    ;ah = residuo
+;    ;al = cociente
+;    push ax
+;    inc cx
+;    cmp al,00h
+;    je FinConv
+;    xor ah,ah
+;    jmp Conv
+;FinConv:
+;    pop ax
+;    mov vec_limit[si],ah
+;    inc si
+;loop FinConv
+;endm
 
+
+conversionF macro buffer,numBytes 
+Local Start,Continue
+mov cx,numBytes
+xor si,si
+Start:	
+	cmp buffer[si],'$'; Ver si es el final del vector
+	je End_conv
+	jmp Continue
+Continue:
+	mov al,buffer[si]
+	sub al,030h
+	mov bl,0ah
+	mul bl
+	add ax,buffer[si+1]
+Loop Start
+End_conv:
+endm 
+
+aHexaF macro buffer,numBytes
+Local C1
+mov SI,offset buffer    
+CLD                              
+mov CX,2
+C1:               
+	mov AX,Entero
+    mul Factor                   
+    mov Entero,AX      
+    xor AX,AX               
+    lodsb                         
+    sub AL,30h                
+    add AX,Entero           
+    mov Entero,AX           
+    loop C1                  
+endm
