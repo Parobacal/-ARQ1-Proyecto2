@@ -215,7 +215,7 @@ Ciclo:
 		je NoAplica
 		cmp buffer[si],09h	;tab
 		je NoAplica
-		cmp buffer[si],0ah	;salto de lÃŒnea
+		cmp buffer[si],0ah	;salto de línea
 		je NoAplica
 		cmp buffer[si],0dh	;retorno de carro
 		je NoAplica
@@ -248,7 +248,7 @@ Ciclo:
 		;printChar buffer[si]
 		jmp NoAplica
 	FinGuardar:
-		xor di,di	;volver el ÃŒndice a 0
+		xor di,di	;volver el índice a 0
 		jmp NoAplica
 	NoAplica:
 		inc si
@@ -303,6 +303,8 @@ InicioCiclo:
 		mov bl,signo
 		mov sX,bl
 		print msmX
+		cmp buffer[si+3],'/'
+		je Barra
 		;inc si
 		;cmp buffer[si],	;potencia
 		;je ExponenteX
@@ -312,6 +314,8 @@ InicioCiclo:
 		mov bl,signo
 		mov sY,bl
 		print msmY
+		cmp buffer[si+3],'/'
+		je Barra
 		jmp Continuar
 	VariableZ:
 		mov bl,signo
@@ -319,9 +323,18 @@ InicioCiclo:
 		print msmZ
 		cmp ig,1
 		je CambiarZ
+		jmp Otro
+	Otro:
+		cmp buffer[si+3],'/'
+		je Barra
 		jmp Continuar
 	CambiarZ:
 		mov VarZ,1
+		cmp buffer[si+3],'/'
+		je Barra
+		jmp Continuar
+	Barra:
+		mov dv,1
 		jmp Continuar
 	ExponenteX:
 		jmp Continuar
@@ -334,7 +347,7 @@ InicioCiclo:
 ;		je Continuar
 ;		cmp buffer[si],09h	;tab
 ;		je Continuar
-;		cmp buffer[si],0ah	;salto de lÃŒnea
+;		cmp buffer[si],0ah	;salto de línea
 ;		je Continuar
 ;		cmp buffer[si],0dh	;retorno de carro
 ;		je Continuar
@@ -380,11 +393,19 @@ CasosZ:
 	jmp Hiperboloide1
 ZPositivo:
 	cmp VarZ,0
-	je Elipsoide
+	je ElipsoideEsfera
 	jmp Paraboloide
+ElipsoideEsfera:
+	cmp dv,1
+	je Elipsoide
+	jmp Esfera_
 Elipsoide:
 	print msmElipse
 	mov identificador,'e'
+	jmp FIN
+Esfera_:
+	print msmEsfera
+	mov identificador,'f'
 	jmp FIN
 Paraboloide:
 	print msmParabola
@@ -554,81 +575,6 @@ endm
 
 
 ;*********************Parabola
-
-escalaP macro entero
-Local Cambiar1,Cambiar2,Diez,veinte,Treinta
-Diez:
-    cmp entero,10
-    jbe Cambiar1 
-    jmp Veinte
-Cambiar1:
-    mov limit_parabola,1
-    jmp fin 
-Veinte:
-    cmp entero,20
-    jbe Cambiar2 
-    jmp Treinta
-Cambiar2:
-    mov limit_parabola,2
-    jmp fin
-Treinta:
-    cmp entero,30
-    jbe Cambiar3
-    jmp Cuarenta
-Cambiar3:
-    mov limit_parabola,3
-    jmp fin
-Cuarenta:
-    cmp entero,40
-    jbe Cambiar4
-    jmp Cincuenta
-Cambiar4:
-    mov limit_parabola,4
-    jmp fin
-Cincuenta:
-    cmp entero,50
-    jbe Cambiar5
-    jmp Sesenta
-Cambiar5:
-    mov limit_parabola,5
-    jmp fin
-Sesenta:
-    cmp entero,60
-    jbe Cambiar6
-    jmp Setenta
-Cambiar6:
-    mov limit_parabola,6
-    jmp fin
-Setenta:
-    cmp entero,70
-    jbe Cambiar7
-    jmp Ochenta
-Cambiar7:
-    mov limit_parabola,7
-    jmp fin
-Ochenta:
-    cmp entero,80
-    jbe Cambiar8
-    jmp Noventa
-Cambiar8:
-    mov limit_parabola,8
-    jmp fin
-Noventa:
-    cmp entero,90
-    jbe Cambiar9
-    jmp Cien
-Cambiar9:
-    mov limit_parabola,9
-    jmp fin
-Cien:
-    cmp entero,100
-    jmp Cambiar10
-Cambiar10:
-    mov limit_parabola,10
-    jmp fin
-Fin:
-endm
-
 ParabolaF macro x,y,apertura,px,py,lim1,lim2
 local Positive_part,Compare_limit,End_graph,Negative_Part,Next,Compare_limit2
 push dx
@@ -995,4 +941,78 @@ C1:
     add AX,Entero           
     mov Entero,AX           
     loop C1                  
+endm
+
+escalaP macro entero
+Local Cambiar1,Cambiar2,Diez,veinte,Treinta
+Diez:
+    cmp entero,10
+    jbe Cambiar1 
+    jmp Veinte
+Cambiar1:
+    mov limit_parabola,1
+    jmp fin 
+Veinte:
+    cmp entero,20
+    jbe Cambiar2 
+    jmp Treinta
+Cambiar2:
+    mov limit_parabola,2
+    jmp fin
+Treinta:
+    cmp entero,30
+    jbe Cambiar3
+    jmp Cuarenta
+Cambiar3:
+    mov limit_parabola,3
+    jmp fin
+Cuarenta:
+    cmp entero,40
+    jbe Cambiar4
+    jmp Cincuenta
+Cambiar4:
+    mov limit_parabola,4
+    jmp fin
+Cincuenta:
+    cmp entero,50
+    jbe Cambiar5
+    jmp Sesenta
+Cambiar5:
+    mov limit_parabola,5
+    jmp fin
+Sesenta:
+    cmp entero,60
+    jbe Cambiar6
+    jmp Setenta
+Cambiar6:
+    mov limit_parabola,6
+    jmp fin
+Setenta:
+    cmp entero,70
+    jbe Cambiar7
+    jmp Ochenta
+Cambiar7:
+    mov limit_parabola,7
+    jmp fin
+Ochenta:
+    cmp entero,80
+    jbe Cambiar8
+    jmp Noventa
+Cambiar8:
+    mov limit_parabola,8
+    jmp fin
+Noventa:
+    cmp entero,90
+    jbe Cambiar9
+    jmp Cien
+Cambiar9:
+    mov limit_parabola,9
+    jmp fin
+Cien:
+    cmp entero,100
+    jmp Cambiar10
+Cambiar10:
+    mov limit_parabola,10
+    jmp fin
+Fin:
 endm

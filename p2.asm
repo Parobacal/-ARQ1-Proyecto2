@@ -1,5 +1,5 @@
 ;===============SECCION DE MACROS ===========================
-include p2m.asm
+include MPF.asm
 
 ;================= DECLARACION TIPO DE EJECUTABLE ============
 .model small 
@@ -38,7 +38,7 @@ msmLSX db 10,13,'>> Limite Superior X: ','$'
 msmLSY db 10,13,'>> Limite Superior Y: ','$'
 msmLSZ db 10,13,'>> Limite Superior Z: ','$'
 
-msmEnviar db 10,13,'>> Se enviÃ› ','$'
+msmEnviar db 10,13,'>> Se envió ','$'
 msmX db 10,13,'>> SignoX ','$'
 msmY db 10,13,'>> SignoY ','$'
 msmZ db 10,13,'>> SignoZ ','$'
@@ -46,6 +46,7 @@ msmSignoMas db 10,13,'>> + ','$'
 msmSignoMenos db 10,13,'>> - ','$'
 msmSilla db 10,13,'>> Silla ','$'
 msmElipse db 10,13,'>> Elipsoide ','$'
+msmEsfera db 10,13,'>> Esfera ','$'
 msmParabola db 10,13,'>> Paraboloide ','$'
 msmHiper1 db 10,13,'>> Hiperboloide 1 hoja ','$'
 msmHiper2 db 10,13,'>> Hiperboloide 2 hojas ','$'
@@ -142,7 +143,7 @@ xminusyED dw 0
 yplusxED dw 0
 yminusxED dw 0
 
-.code ;segmento de cÃ›digo
+.code ;segmento de código
 ;================== SECCION DE CODIGO ===========================
 main proc
 		MENU1:
@@ -216,6 +217,8 @@ main proc
 				je esfera
 				cmp identificador,'p'
 				je esfera 
+				cmp identificador,'f'
+				je esfera
 				jmp Grafica2D
 			XZ:
 				ModoVideo
@@ -229,6 +232,8 @@ main proc
 				je cono
 				cmp identificador,'p'
 				je paraboloideE 
+				cmp identificador,'f'
+				je esfera
 				jmp Grafica2D
 			YZ:
 				ModoVideo
@@ -242,6 +247,8 @@ main proc
 				je cono
 				cmp identificador,'p'
 				je paraboloideE 
+				cmp identificador,'f'
+				je esfera
 				jmp Grafica2D
 				esfera:
 					mov x,160 ; center x
@@ -328,8 +335,8 @@ main proc
 			;COMENZAMOS LOS PREPARATIVOS PARA ENVIAR DATOS SERIALMENTE
 		;preparamos puerto
 		mov ah,00h ;inicializa puerto
-		mov al,11100011b ;parÂ·metros
-		mov dx,00 ; puerto COM1 (el com 2 serÃŒa mov dx,01); podria ser un ERROR COLOCAR COM4 osea 03
+		mov al,11100011b ;parámetros
+		mov dx,00 ; puerto COM1 (el com 2 sería mov dx,01); podria ser un ERROR COLOCAR COM4 osea 03
 		int 14H ;llama al BIOS
 		;Iniciamos nuestro conteo de si en la posicion 0.
 		;mov si,00h
@@ -339,7 +346,7 @@ main proc
 enviar:
 
 		;enviamos caracter por caracer
-		mov ah,01h ;peticion para caracter de transmisiÃ›n
+		mov ah,01h ;peticion para caracter de transmisión
 		mov bl,identificador
 		mov vector[00h],bl
         mov al,vector[00h];caracter a enviar
@@ -361,8 +368,8 @@ enviar:
 		;COMENZAMOS LOS PREPARATIVOS PARA ENVIAR DATOS SERIALMENTE
 		;preparamos puerto
 		mov ah,00h ;inicializa puerto
-		mov al,11100011b ;parÂ·metros
-		mov dx,00 ; puerto COM1 (el com 2 serÃŒa mov dx,01); podria ser un ERROR COLOCAR COM4 osea 03
+		mov al,11100011b ;parámetros
+		mov dx,00 ; puerto COM1 (el com 2 sería mov dx,01); podria ser un ERROR COLOCAR COM4 osea 03
 		int 14H ;llama al BIOS
 		;Iniciamos nuestro conteo de si en la posicion 0.
 		;mov si,00h
@@ -372,7 +379,7 @@ enviar:
 enviar2:
 
 		;enviamos caracter por caracer
-		mov ah,01h ;peticion para caracter de transmisiÃ›n
+		mov ah,01h ;peticion para caracter de transmisión
 		mov al,'m';caracter a enviar
 
 		;cmp al,0dh  ;Se repite el envio de datos hasta que se teclee un Enter.
